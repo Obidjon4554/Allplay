@@ -1,6 +1,7 @@
 <template>
   <section class="py-16">
     <div class="container p-20">
+
       <div class="flex gap-16  text-xl text-gray-400 transition-all ">
         <swiper :modules="modules" :breakpoints="{
           320: {
@@ -36,7 +37,10 @@
           <button class="btn next"><i class="fas fa-chevron-right"></i></button>
         </div>
       </div>
-      <div class="carousel">
+      <div v-if="isLoading" class="loader-container">
+        <Loader />
+      </div>
+      <div v-else class="carousel">
         <swiper :slidesPerView="1" :spaceBetween="30" :effect="'fade'" :modules="modules" class="swiper-wrap" :autoplay="{
           delay: 3000,
           disableOnInteraction: false,
@@ -64,6 +68,26 @@
         </swiper>
       </div>
       <filmsList :listMovie="filteredMovies" />
+      <div v-if="isLoading" class="loader-container">
+        <Loader />
+      </div>
+      <div v-else class="pagination mt-5 justify-center ">
+        <ul class="flex items-center relative left-[500px]">
+          <li @click="goToPreviousPage(page)"
+            class=" flex items-center justify-center cursor-pointer px-3 h-8 ml-0 leading-tight bg-brand-color border-r-2 border-black">
+            <button class="btn">Previous</button>
+          </li>
+          <li @click="goToPage(page)"
+            class=" flex items-center justify-center cursor-pointer px-3 h-8 ml-0 leading-tight border border-brand-color"
+            v-for="page in visiblePages" :key="page" :class="{ 'bg-brand-color': isPageActive(page) }">
+            <button class="btn">{{ page }}</button>
+          </li>
+          <li @click="goToNextPage(page)"
+            class=" flex items-center justify-center cursor-pointer px-3 h-8 ml-0 leading-tight bg-brand-color  border-l-2 border-black">
+            <button class="btn">Next</button>
+          </li>
+        </ul>
+      </div>
     </div>
   </section>
 </template>
@@ -73,13 +97,14 @@ import { Swiper, SwiperSlide } from 'swiper/vue';
 import 'swiper/css';
 import 'swiper/css/navigation';
 import { Navigation } from 'swiper/modules';
-
+import Loader from '../components/Loader.vue';
 import filmsList from '../components/filmsList.vue';
 export default {
   components: {
     Swiper,
     SwiperSlide,
-    filmsList
+    filmsList,
+    Loader
   },
   data() {
     return {
@@ -290,10 +315,13 @@ export default {
         },
       ],
       currentPage: 1,
-      totalPages: 20,
+      itemsPerPage: 12,
+      totalPages: 22,
       selectedCategory: 'Фильмы',
       categories: ['https://api.allplay.uz/api/v1/categories'],
       filteredMovies: [],
+      maxVisiblePages: 5,
+      isLoading: true,
     }
   },
   methods: {
@@ -328,8 +356,10 @@ export default {
       }
     },
     filterMoviesByCategory() {
+      const startIndex = (this.currentPage - 1) * this.itemsPerPage;
+      const endIndex = startIndex + this.itemsPerPage;
       if (this.selectedCategory === 'Фильмы') {
-        return this.listMovie;
+        return this.listMovie.slice(startIndex, endIndex);
       } else {
         return this.listMovie.filter((movie) => {
           const categoryMatches =
@@ -337,22 +367,55 @@ export default {
             Array.isArray(movie.categories) &&
             movie.categories.some((cat) => cat.name === this.selectedCategory);
           return categoryMatches;
-        });
+        }).slice(startIndex, endIndex);
       }
     },
-    selectCategory(category) {
-      this.selectedCategory = category;
+    isPageActive(page) {
+      return this.currentPage === page;
+    },
+    calculateVisiblePages() {
+      const startPage = Math.max(1, this.currentPage - Math.floor(this.maxVisiblePages / 2));
+      const endPage = Math.min(this.totalPages, startPage + this.maxVisiblePages - 1);
+      return Array.from({ length: endPage - startPage + 1 }, (_, index) => startPage + index);
+    },
+
+    goToPreviousPage() {
+      if (this.currentPage > 1) {
+        this.currentPage--;
+        this.filteredMovies = this.filterMoviesByCategory();
+      }
+    },
+
+    goToNextPage() {
+      if (this.currentPage < this.totalPages) {
+        this.currentPage++;
+        this.filteredMovies = this.filterMoviesByCategory();
+      }
+    },
+
+    goToPage(page) {
+      this.currentPage = page;
       this.filteredMovies = this.filterMoviesByCategory();
     },
   },
+
   computed: {
-
-
+    visiblePages() {
+      return this.calculateVisiblePages();
+    },
   },
+
   created() {
+    this.fetchFeaturedMovies().then((data) => {
+      if (data && Array.isArray(data.data) && data.data.length > 0) {
+        this.listMovie = [...this.listMovie, ...data.data];
+      }
+      this.isLoading = false; 
+    });
     this.movieList().then(() => {
       this.selectedCategory = this.menuArray[0].title;
       this.filteredMovies = this.filterMoviesByCategory();
+      this.isLoading = false;
     });
   },
   mounted() {
