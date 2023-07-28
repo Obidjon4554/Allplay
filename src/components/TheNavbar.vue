@@ -1,5 +1,5 @@
 <template>
-    <header class="fixed px-20 py-8 bg-black z-50">
+    <header class="fixed w-full  min-height-[100vh] flex items-center justify-center px-20 py-8 bg-black z-50">
         <div class="container flex items-center gap-72  justify-between">
             <div class="logo flex gap-8 mx-auto items-center text-2xl">
 

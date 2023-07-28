@@ -1,8 +1,8 @@
 <template>
-  <section class="py-16">
-    <div class="container p-20">
+  <section class="p-20 w-full min-height-[100vh] flex items-center justify-center">
+    <div class="container">
 
-      <div class="flex gap-16  text-xl text-gray-400 transition-all ">
+      <div class="flex gap-8 pt-20 text-xl text-gray-400 transition-all ">
         <swiper :modules="modules" :breakpoints="{
           320: {
             slidesPerView: 2,
@@ -24,6 +24,7 @@
   nextEl: '.next',
   prevEl: '.prev',
 }" :loop="true" :slidesPerView="9" class="swiper-wrap my-5 flex">
+          <button class="btn prev text-white gap-6 text-2xl relative  bottom-20"><i class="fas fa-chevron-left"></i></button>
           <swiper-slide class="flex mx-3 pb-5 hover:text-white cursor-pointer" v-for="item in menuArray" :key="item"
             @click="selectCategory(item.title)"
             :class="selectedCategory === item.title ? 'text-white underline' : 'text-gray-400'">
@@ -32,10 +33,7 @@
             </li>
           </swiper-slide>
         </swiper>
-        <div class="arrows flex text-white gap-6 text-2xl">
-          <button class="btn prev absolute left-8 bottom-[546px]"><i class="fas fa-chevron-left"></i></button>
-          <button class="btn next"><i class="fas fa-chevron-right"></i></button>
-        </div>
+          <button class="btn next text-white gap-6 text-2xl relative  bottom-7"><i class="fas fa-chevron-right"></i></button>
       </div>
       <div v-if="isLoading" class="loader-container">
         <Loader />
@@ -69,25 +67,25 @@
       </div>
       <filmsList :listMovie="filteredMovies" />
       <div v-if="isLoading" class="loader-container">
-        <Loader />
-      </div>
-      <div v-else class="pagination mt-5 justify-center ">
-        <ul class="flex items-center relative left-[500px]">
-          <li @click="goToPreviousPage(page)"
-            class=" flex items-center justify-center cursor-pointer px-3 h-8 ml-0 leading-tight bg-brand-color border-r-2 border-black">
-            <button class="btn">Previous</button>
-          </li>
-          <li @click="goToPage(page)"
-            class=" flex items-center justify-center cursor-pointer px-3 h-8 ml-0 leading-tight border border-brand-color"
-            v-for="page in visiblePages" :key="page" :class="{ 'bg-brand-color': isPageActive(page) }">
-            <button class="btn">{{ page }}</button>
-          </li>
-          <li @click="goToNextPage(page)"
-            class=" flex items-center justify-center cursor-pointer px-3 h-8 ml-0 leading-tight bg-brand-color  border-l-2 border-black">
-            <button class="btn">Next</button>
-          </li>
-        </ul>
-      </div>
+  <Loader />
+</div>
+<div v-else class="pagination mt-5 justify-center ">
+  <ul class="flex items-center relative left-[500px]">
+    <li @click="goToPreviousPage(page)"
+      class="flex items-center justify-center cursor-pointer px-3 h-8 ml-0 leading-tight bg-brand-color border-r-2 border-black">
+      <button class="btn">Previous</button>
+    </li>
+    <li @click="goToPage(page)"
+      class="flex items-center justify-center cursor-pointer px-3 h-8 ml-0 leading-tight border border-brand-color"
+      v-for="page in visiblePages" :key="page" :class="{ 'bg-brand-color': isPageActive(page) }">
+      <button class="btn">{{ page }}</button>
+    </li>
+    <li @click="goToNextPage(page)"
+      class="flex items-center justify-center cursor-pointer px-3 h-8 ml-0 leading-tight bg-brand-color border-l-2 border-black">
+      <button class="btn">Next</button>
+    </li>
+  </ul>
+</div>
     </div>
   </section>
 </template>
@@ -337,17 +335,16 @@ export default {
     },
 
     async movieList() {
-      try {
-        while (this.currentPage <= this.totalPages) {
-          const response = await fetch(this.apiList[this.currentPage - 1]);
-          const data = await response.json();
-          this.listMovie = this.listMovie.concat(data.data);
-          this.currentPage++;
-        }
-      } catch (error) {
-        console.error('Error fetching data:', error);
-      }
-    },
+  try {
+    for (const apiURL of this.apiList) {
+      const response = await fetch(apiURL);
+      const data = await response.json();
+      this.listMovie = this.listMovie.concat(data.data);
+    }
+  } catch (error) {
+    console.error('Error fetching data:', error);
+  }
+},
     truncateDescription(description, maxLength) {
       if (description.length > maxLength) {
         return description.substring(0, maxLength) + '...';
@@ -356,20 +353,20 @@ export default {
       }
     },
     filterMoviesByCategory() {
-      const startIndex = (this.currentPage - 1) * this.itemsPerPage;
-      const endIndex = startIndex + this.itemsPerPage;
-      if (this.selectedCategory === 'Фильмы') {
-        return this.listMovie.slice(startIndex, endIndex);
-      } else {
-        return this.listMovie.filter((movie) => {
-          const categoryMatches =
-            movie.categories &&
-            Array.isArray(movie.categories) &&
-            movie.categories.some((cat) => cat.name === this.selectedCategory);
-          return categoryMatches;
-        }).slice(startIndex, endIndex);
-      }
-    },
+  const startIndex = (this.currentPage - 1) * this.itemsPerPage;
+  const endIndex = startIndex + this.itemsPerPage;
+  if (this.selectedCategory === 'Фильмы') {
+    return this.listMovie.slice(startIndex, endIndex);
+  } else {
+    return this.listMovie.filter((movie) => {
+      const categoryMatches =
+        movie.categories &&
+        Array.isArray(movie.categories) &&
+        movie.categories.some((cat) => cat.name === this.selectedCategory);
+      return categoryMatches;
+    }).slice(startIndex, endIndex);
+  }
+},
     isPageActive(page) {
       return this.currentPage === page;
     },
@@ -380,23 +377,26 @@ export default {
     },
 
     goToPreviousPage() {
-      if (this.currentPage > 1) {
-        this.currentPage--;
-        this.filteredMovies = this.filterMoviesByCategory();
-      }
-    },
+  if (this.currentPage > 1) {
+    this.currentPage--;
+    this.filteredMovies = this.filterMoviesByCategory();
+  }
+},
 
-    goToNextPage() {
-      if (this.currentPage < this.totalPages) {
-        this.currentPage++;
-        this.filteredMovies = this.filterMoviesByCategory();
-      }
-    },
+goToNextPage() {
+  if (this.currentPage < this.totalPages) {
+    this.currentPage++;
+    this.filteredMovies = this.filterMoviesByCategory();
+  }
+},
 
-    goToPage(page) {
-      this.currentPage = page;
-      this.filteredMovies = this.filterMoviesByCategory();
-    },
+goToPage(page) {
+  if (page >= 1 && page <= this.totalPages) {
+    this.currentPage = page;
+    this.filteredMovies = this.filterMoviesByCategory();
+  }
+},
+
   },
 
   computed: {
@@ -406,24 +406,29 @@ export default {
   },
 
   created() {
-    this.fetchFeaturedMovies().then((data) => {
-      if (data && Array.isArray(data.data) && data.data.length > 0) {
-        this.listMovie = [...this.listMovie, ...data.data];
-      }
-      this.isLoading = false; 
-    });
-    this.movieList().then(() => {
-      this.selectedCategory = this.menuArray[0].title;
-      this.filteredMovies = this.filterMoviesByCategory();
-      this.isLoading = false;
-    });
-  },
+  this.fetchFeaturedMovies().then((data) => {
+    if (data && Array.isArray(data.data) && data.data.length > 0) {
+      this.listMovie = [...this.listMovie, ...data.data];
+    }
+    this.isLoading = false;
+    this.filteredMovies = this.filterMoviesByCategory(); // Set initial value for filteredMovies
+  });
+
+  this.currentPage = 1;
+  this.movieList().then(() => {
+    this.selectedCategory = this.menuArray[0].title;
+    this.isLoading = false;
+  });
+},
   mounted() {
     this.fetchFeaturedMovies().then((data) => {
       if (data && Array.isArray(data.data) && data.data.length > 0) {
         this.listMovie = [...this.listMovie, ...data.data];
       }
     });
+
+    this.currentPage = 1;
+
     this.movieList();
   },
 }

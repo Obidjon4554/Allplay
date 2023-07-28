@@ -1,8 +1,8 @@
 <template>
-    <div class="bottom py-20 flex flex-col gap-5 ">
-        <h1 class="title text-4xl">Новинки </h1>
-        <div class="wrapper flex flex-wrap gap-6 transition-all ">
-            <div class="card w-[200px] h-[290px]   transition-all hover:-translate-y-2 hover:shadow-md hover:shadow-gray-500 rounded-sm"
+    <div class="bottom   py-20 w-full flex flex-col gap-2">
+        <h1 class="title text-4xl pb-4 ">Новинки </h1>
+        <div class="wrapper min-height-[100vh]  items-center justify-center w-full  flex flex-wrap gap-2 transition-all ">
+            <div class="card w-[219px] h-[300px]   transition-all hover:-translate-y-2 hover:shadow-md hover:shadow-gray-500 rounded-sm"
                 v-for="movie in listMovie" :key="movie.id">
                 <a :href="movie.url">
                     <div class="card-image" :style="{ backgroundImage: 'url(' + movie.poster.url_340x450 + ')', }">
