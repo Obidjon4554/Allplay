@@ -26,7 +26,7 @@
 }" :loop="true" :slidesPerView="9" class="swiper-wrap my-5 flex">
           <button class="btn prev text-white gap-6 text-2xl relative  bottom-20"><i class="fas fa-chevron-left"></i></button>
           <swiper-slide class="flex mx-3 pb-5 hover:text-white cursor-pointer" v-for="item in menuArray" :key="item"
-            @click="selectCategory(item.title)"
+            
             :class="selectedCategory === item.title ? 'text-white underline' : 'text-gray-400'">
             <li class="text-center">
               {{ item.title }}
@@ -133,7 +133,6 @@ export default {
       menuArray: [
         {
           title: 'Фильмы',
-          route: '#'
         },
         {
           title: 'Сериалы',
@@ -314,7 +313,7 @@ export default {
       ],
       currentPage: 1,
       itemsPerPage: 12,
-      totalPages: 22,
+      totalPages: 41,
       selectedCategory: 'Фильмы',
       categories: ['https://api.allplay.uz/api/v1/categories'],
       filteredMovies: [],
@@ -353,7 +352,7 @@ export default {
       }
     },
     filterMoviesByCategory() {
-  const startIndex = (this.currentPage - 1) * this.itemsPerPage;
+  const startIndex = (this.currentPage - 1) * this.itemsPerPage / 3;
   const endIndex = startIndex + this.itemsPerPage;
   if (this.selectedCategory === 'Фильмы') {
     return this.listMovie.slice(startIndex, endIndex);
@@ -411,7 +410,7 @@ goToPage(page) {
       this.listMovie = [...this.listMovie, ...data.data];
     }
     this.isLoading = false;
-    this.filteredMovies = this.filterMoviesByCategory(); // Set initial value for filteredMovies
+    this.filteredMovies = this.filterMoviesByCategory();
   });
 
   this.currentPage = 1;
